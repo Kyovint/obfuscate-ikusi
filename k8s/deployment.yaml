@@ -48,11 +48,6 @@ spec:
                 configMapKeyRef:
                   name: obfuscate-ms-config
                   key: DB_NAME
-            - name: DATE_OFFSET_DAYS
-              valueFrom:
-                configMapKeyRef:
-                  name: obfuscate-ms-config
-                  key: DATE_OFFSET_DAYS
             # Secret
             - name: DB_USER
               valueFrom:

@@ -11,7 +11,6 @@ class ColType(str, Enum):
     OPP_FOLIO = "opp_folio"
     DEPT = "dept"
     TEXT_DESC = "text_desc"
-    DATE = "date"
     PASSTHROUGH = "passthrough"
 
 
@@ -96,9 +95,9 @@ COLUMN_TYPE_MAP: dict[str, ColType] = {
     "expense_description":                  ColType.TEXT_DESC,
     "position_description":                 ColType.TEXT_DESC,
 
-    # ── DATES (shifted, not revealed) ─────────────────────────────────────────
-    "commercial_win_date":                  ColType.DATE,
-    "projected_close_date":                 ColType.DATE,
+    # ── DATES ─────────────────────────────────────────────────────────────────
+    "commercial_win_date":                  ColType.PASSTHROUGH,
+    "projected_close_date":                 ColType.PASSTHROUGH,
 
     # ── PASSTHROUGH ───────────────────────────────────────────────────────────
     "year":                                 ColType.PASSTHROUGH,

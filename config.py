@@ -11,7 +11,6 @@ class Settings(BaseSettings):
     db_password: str = ""
     cop_factor: float = 0.000001
     usd_factor: float = 0.001
-    date_offset_days: int = -365
 
 
 settings = Settings()
