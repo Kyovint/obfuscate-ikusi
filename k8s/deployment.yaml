@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: obfuscate-ms
+  namespace: ikusito
+  labels:
+    app: obfuscate-ms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: obfuscate-ms
+  template:
+    metadata:
+      labels:
+        app: obfuscate-ms
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - kubeworker1
+      containers:
+        - name: obfuscate-ms
+          image: obfuscate_ms:1.0.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          env:
+            # ConfigMap
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: obfuscate-ms-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: obfuscate-ms-config
+                  key: DB_PORT
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: obfuscate-ms-config
+                  key: DB_NAME
+            - name: DATE_OFFSET_DAYS
+              valueFrom:
+                configMapKeyRef:
+                  name: obfuscate-ms-config
+                  key: DATE_OFFSET_DAYS
+            # Secret
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: obfuscate-ms-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: obfuscate-ms-secret
+                  key: DB_PASSWORD
+            - name: COP_FACTOR
+              valueFrom:
+                secretKeyRef:
+                  name: obfuscate-ms-secret
+                  key: COP_FACTOR
+            - name: USD_FACTOR
+              valueFrom:
+                secretKeyRef:
+                  name: obfuscate-ms-secret
+                  key: USD_FACTOR
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+      restartPolicy: Always

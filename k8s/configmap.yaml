@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: obfuscate-ms-config
+  namespace: ikusito
+data:
+  DB_HOST: ikusito-postgresql-rw.ikusito.svc.cluster.local
+  DB_PORT: "5432"
+  DB_NAME: ikusito_db
+  DATE_OFFSET_DAYS: "-365"

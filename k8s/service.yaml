@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: obfuscate-ms
+  namespace: ikusito
+  labels:
+    app: obfuscate-ms
+spec:
+  type: ClusterIP
+  selector:
+    app: obfuscate-ms
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8000
+      targetPort: 8000
