@@ -1,4 +1,3 @@
-import hashlib
 import threading
 import psycopg2
 import psycopg2.pool
@@ -17,7 +16,7 @@ _ENTITY_PREFIXES = {
     "text_desc":    "DESC",
 }
 
-# Fixed advisory lock IDs per entity type — avoids hash collisions
+# Fixed advisory lock IDs per entity type
 _ADVISORY_LOCK_IDS = {
     "person":       2001,
     "company":      2002,
@@ -30,12 +29,12 @@ _ADVISORY_LOCK_IDS = {
 
 _CREATE_TABLE = """
 CREATE TABLE IF NOT EXISTS obfuscation_entity_mappings (
-    id          SERIAL      PRIMARY KEY,
-    entity_type VARCHAR(50)  NOT NULL,
-    orig_hash   VARCHAR(64)  NOT NULL,
-    pseudonym   VARCHAR(100) NOT NULL,
-    created_at  TIMESTAMP    DEFAULT NOW(),
-    UNIQUE (entity_type, orig_hash)
+    id             SERIAL       PRIMARY KEY,
+    entity_type    VARCHAR(50)  NOT NULL,
+    original_value TEXT         NOT NULL,
+    pseudonym      VARCHAR(100) NOT NULL,
+    created_at     TIMESTAMP    DEFAULT NOW(),
+    UNIQUE (entity_type, original_value)
 );
 """
 
@@ -68,12 +67,7 @@ def init_db() -> None:
         pool.putconn(conn)
 
 
-def _sha256(value: str) -> str:
-    return hashlib.sha256(value.encode("utf-8")).hexdigest()
-
-
 def get_or_create_pseudonym(entity_type: str, original_value: str) -> str:
-    h = _sha256(original_value)
     prefix = _ENTITY_PREFIXES.get(entity_type, "ENTITY")
     lock_id = _ADVISORY_LOCK_IDS.get(entity_type, 2999)
 
@@ -84,8 +78,8 @@ def get_or_create_pseudonym(entity_type: str, original_value: str) -> str:
             # Fast path: entity already exists
             cur.execute(
                 "SELECT pseudonym FROM obfuscation_entity_mappings "
-                "WHERE entity_type = %s AND orig_hash = %s",
-                (entity_type, h),
+                "WHERE entity_type = %s AND original_value = %s",
+                (entity_type, original_value),
             )
             row = cur.fetchone()
             if row:
@@ -98,8 +92,8 @@ def get_or_create_pseudonym(entity_type: str, original_value: str) -> str:
             # Re-check after acquiring lock (another thread may have inserted)
             cur.execute(
                 "SELECT pseudonym FROM obfuscation_entity_mappings "
-                "WHERE entity_type = %s AND orig_hash = %s",
-                (entity_type, h),
+                "WHERE entity_type = %s AND original_value = %s",
+                (entity_type, original_value),
             )
             row = cur.fetchone()
             if row:
@@ -114,9 +108,9 @@ def get_or_create_pseudonym(entity_type: str, original_value: str) -> str:
             pseudonym = f"{prefix}_{count + 1:03d}"
 
             cur.execute(
-                "INSERT INTO obfuscation_entity_mappings (entity_type, orig_hash, pseudonym) "
+                "INSERT INTO obfuscation_entity_mappings (entity_type, original_value, pseudonym) "
                 "VALUES (%s, %s, %s)",
-                (entity_type, h, pseudonym),
+                (entity_type, original_value, pseudonym),
             )
             conn.commit()
             return pseudonym
