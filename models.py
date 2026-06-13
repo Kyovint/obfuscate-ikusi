@@ -10,3 +10,11 @@ class ObfuscateRequest(BaseModel):
 class ObfuscateResponse(BaseModel):
     columns: list[str]
     rows: list[list[Any]]
+
+
+class DeobfuscateRequest(BaseModel):
+    text: str
+
+
+class DeobfuscateResponse(BaseModel):
+    text: str

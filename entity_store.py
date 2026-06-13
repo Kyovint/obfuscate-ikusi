@@ -67,6 +67,21 @@ def init_db() -> None:
         pool.putconn(conn)
 
 
+def get_all_mappings() -> list[tuple[str, str]]:
+    """Returns (pseudonym, original_value) pairs sorted by pseudonym length descending."""
+    pool = _get_pool()
+    conn = pool.getconn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT pseudonym, original_value FROM obfuscation_entity_mappings "
+                "ORDER BY LENGTH(pseudonym) DESC"
+            )
+            return cur.fetchall()
+    finally:
+        pool.putconn(conn)
+
+
 def get_or_create_pseudonym(entity_type: str, original_value: str) -> str:
     prefix = _ENTITY_PREFIXES.get(entity_type, "ENTITY")
     lock_id = _ADVISORY_LOCK_IDS.get(entity_type, 2999)
